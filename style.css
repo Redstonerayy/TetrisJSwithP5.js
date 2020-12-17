@@ -1,0 +1,30 @@
+/* font */
+@import url('https://fonts.googleapis.com/css2?family=Nerko+One&display=swap');
+
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Nerko One', cursive;
+}
+
+/*center canvas of p5.js
+this is the selector in MY Html Document so i can modify the main
+created by the createCanvas() function.
+*/
+
+body > main:nth-child(3) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+  text-align: center;
+  font-size: 40px;
+}
+
+hr {
+  border-top: 5px solid black;
+  border-bottom: 5px solid black;
+}
