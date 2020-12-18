@@ -216,16 +216,24 @@ function keyPressed(){
 	} else if (keyCode === 38){ // up switch with on hold
 		let temp = current_tile;
 		if(onHold != undefined){
-			current_tile = onHold;
+			current_tile = {...onHold};
 			current_tile.x = temp.x;
 			current_tile.y = temp.y;
+			if(!current_tile.isvalidmove(current_tile.tileshape)){//tilepostion after switch is not valid
+				current_tile = temp;
+			} else {//place the new on hold tile cuz switch is valid
+				onHold = temp;
+				onHold.x = 2 * gconsts.blocksize;
+				onHold.y = 3 * gconsts.blocksize;
+			}
 		} else {
 			let tilenumber = Math.floor(Math.random() * 7);//0-6
 			current_tile = new tile(gconsts.blocksize * (Math.floor(Math.random() * (gconsts.xwidth - 11)) + 6), 60, gconsts.tiles[tilenumber][0], gconsts.tiles[tilenumber][1], gconsts.tiles[tilenumber][2]);
+			onHold = temp;
+			onHold.x = 2 * gconsts.blocksize;
+			onHold.y = 3 * gconsts.blocksize;
 		}
-		onHold = temp;
-		onHold.x = 2 * gconsts.blocksize;
-		onHold.y = 3 * gconsts.blocksize;
+
 	} else if (keyCode === 39){ // right
 		current_tile.moveright();
 	} else if (keyCode === 40){ // down
