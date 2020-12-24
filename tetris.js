@@ -88,28 +88,36 @@ function tile(xpos, ypos, tileshape, tilecolor, tilename){
 		}
 	}
 
-	this.isvalidmove = function(cordinatearray){//only x cordinate is important
+	this.isvalidmove = function(cordinatearray){
 		let valid = true;
 		let gridpos = this.getgridpos();
 		//check left and right border
+		//tileshape
 		for (var i = 0; i < cordinatearray.length; i++) {
-			if(34 < (gridpos[0] + cordinatearray[i][0]) || (gridpos[0] + cordinatearray[i][0] < 5)){
+			if((gconsts.xwidth - 6) < (gridpos[0] + cordinatearray[i][0]) || (gridpos[0] + cordinatearray[i][0] < 5)){
 				valid = false;
 			}
 		}
 		//check 0, 0 point
-		if(34 < gridpos[0] || gridpos[0] < 5){
+		if((gconsts.xwidth - 6) < gridpos[0] || gridpos[0] < 5){
 			valid = false;
 		}
-
 		//check if tiles block
-		for (var i = 0; i < cordinatearray.length; i++) {
-			if(grid.grid[gridpos[1] + cordinatearray[i][1]][gridpos[0] + cordinatearray[i][0]] != 0){
+		// y cordinate can be out of array range if it`s at the bottom
+		try {
+			//tileshape
+			for (var i = 0; i < cordinatearray.length; i++) {
+				console.log(gridpos[1] + cordinatearray[i][1]);
+				console.log(gridpos[0] + cordinatearray[i][0]);
+				if(grid.grid[gridpos[1] + cordinatearray[i][1]][gridpos[0] + cordinatearray[i][0]] != 0){
+					valid = false;
+				}
+			}
+			//check 0, 0 point
+			if(grid.grid[gridpos[1]][gridpos[0]] != 0){
 				valid = false;
 			}
-		}
-		//check 0, 0 point
-		if(grid.grid[gridpos[1]][gridpos[0]] != 0){
+		} catch (e) {
 			valid = false;
 		}
 		return valid;
@@ -167,7 +175,7 @@ function tile(xpos, ypos, tileshape, tilecolor, tilename){
 		if(this.isvalidmove(this.tileshape.map((value) => {
 			return [value[0] + 1, value[1]];
 		}))){
-		this.x += gconsts.blocksize;
+			this.x += gconsts.blocksize;
 		}
 	}
 
@@ -185,6 +193,7 @@ function tile(xpos, ypos, tileshape, tilecolor, tilename){
 function Grid(xwidth, yheight){
 	this.xwidth = xwidth;
 	this.yheight = yheight;
+	this.tiles = [];
 	//methods
 	this.emptygrid = function(xwidth, yheight){
 		grid = [];
@@ -204,6 +213,20 @@ function Grid(xwidth, yheight){
 		}
 		for(let i = 5; i < this.xwidth - 4; i++){
 			line(i * gconsts.blocksize, 0, i * gconsts.blocksize, this.yheight * gconsts.blocksize);
+		}
+	}
+
+	this.tilesdown = function(){
+		for (let i = 0; i < this.tiles.length; i++) {
+			for(let j = 0; j < this.tiles[i].tileshape.length; j++){
+				this.tiles[i].tileshape[j][1] += 1;
+			}
+		}
+	}
+
+	this.gridshowtiles = function () {
+		for (let i = 0; i < this.tiles.length; i++) {
+			this.tiles[i].show();
 		}
 	}
 }
@@ -249,29 +272,63 @@ function keyPressed(){
 
 //program
 function setup(){
+	//gameconstants
 	gconsts = new gameconstants();//be carefull, you may brake the game when changing
-	createCanvas(gconsts.xwidth * gconsts.blocksize, gconsts.yheight * gconsts.blocksize);
+
 	//random tile at the start
+	//random x starting position for each new tile
 	let tilenumber = Math.floor(Math.random() * 7);//0-6
-	//random x starting position for each new til
 	current_tile = new tile(gconsts.blocksize * (Math.floor(Math.random() * (gconsts.xwidth - 11)) + 6), 60, gconsts.tiles[tilenumber][0], gconsts.tiles[tilenumber][1], gconsts.tiles[tilenumber][2]);
+	//set onhold
 	onHold = undefined;
+	//make grid
 	grid = new Grid(gconsts.xwidth, gconsts.yheight);//gconsts.xwidth, gconsts.yheight
-	//make the current_tile move down with the setInterval() method
+
+	//canvas
+	createCanvas(gconsts.xwidth * gconsts.blocksize, gconsts.yheight * gconsts.blocksize);
+	//make the current_tile move down with the setInterval() function
+	setInterval(() => {
+		console.log(current_tile.tileshape);
+		if(current_tile.isvalidmove(current_tile.tileshape.map((value) => {
+			return [value[0], value[1] + 1];
+		}))){
+			current_tile.down();
+		} else {
+			console.log(current_tile.tileshape);
+			//new tile, old tile in grid.tiles array
+			grid.tiles.push(current_tile);
+			let gridpos = current_tile.getgridpos();
+			for(let i = 0; i < current_tile.tileshape.length; i++){
+				let gridx = gridpos[0] + current_tile.tileshape[i][0];
+				let gridy = gridpos[1] - current_tile.tileshape[i][1];
+				console.log(gridx, gridy);
+				grid.grid[gridy][gridx] = 1;
+			}
+			console.log(gridpos);
+			grid.grid[gridpos[1]][gridpos[0]] = 1;
+			let tilenumber = Math.floor(Math.random() * 7);//0-6
+			current_tile = new tile(gconsts.blocksize * (Math.floor(Math.random() * (gconsts.xwidth - 11)) + 6), 60, gconsts.tiles[tilenumber][0], gconsts.tiles[tilenumber][1], gconsts.tiles[tilenumber][2]);
+			console.log(grid.grid);
+		}
+	}, 1000);
 }
 
+
 function draw(){
-	//frameRate(10);
+	//show background
 	background("grey");
 	grid.showgridlines();
-	current_tile.show();
-	if(onHold != undefined){
-		onHold.show();
-	}
-	//show text
 	textSize(20);
 	fill("black");
 	text("On Hold", 30, 20);
 	text("Next",  gconsts.xwidth * gconsts.blocksize - 100, 20)
-	//current_tile.down();
+
+	//background tiles
+	grid.gridshowtiles();
+
+	//tiles
+	current_tile.show();
+	if(onHold != undefined){
+		onHold.show();
+	}
 }
